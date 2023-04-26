@@ -34,7 +34,8 @@ def establish_connection(url, params=None, payload=None):
 
 
 def json_to_csv(json_data, output_filename):
-    tqdm_bar(100, "Generando archivo CSV...", "{l_bar}{bar}| {n_fmt}/{total_fmt} ")
+    tqdm_bar(100, "Generando archivo CSV...",
+             "{l_bar}{bar}| {n_fmt}/{total_fmt} ")
 
     data = json.loads(json_data)
     cdr_data = data["CDR"]
@@ -49,15 +50,6 @@ def json_to_csv(json_data, output_filename):
 
     print(f"Archivo CSV generado: {output_filename}")
 
-
-params = {
-    "CDRJSON": "1",
-    "ip": "10.210.11.250",
-    "FechaInicial": "2023-04-26",
-    "FechaFinal": "2023-04-26",
-    "user": "reportes.qnt",
-    "password": "Reportes2020*",
-}
 
 url = "https://estaqueue.udpsa.com/estadisticasEntrada.php?"
 
