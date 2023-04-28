@@ -1,60 +1,66 @@
-from tqdm import tqdm
+from modules.environ import IP_VPN, USER_ESTAQUEUE, PASSWORD_ESTAQUEUE
+from modules.sf_conection import get_salesforce_records
+from modules.sf_csv_process import merge_cdr_and_salesforce_data
+from modules.utils import (
+    get_userfield_ids,
+    validate_and_correct_ids,
+    establish_connection,
+    read_config_file,
+)
+from modules.queue_csv_process import json_to_csv_cdr
 import csv
-import json
-import requests
-import time
-
-import sys
 
 
-def tqdm_bar(total, desc, bar_format, sleep_time=0.1):
-    with tqdm(total=total, desc=desc, bar_format=bar_format) as pbar:
-        for i in range(total):
-            time.sleep(sleep_time)
-            pbar.update(1)
+config = read_config_file("config.txt")
+fecha_inicial = config["fecha_inicial"]
+fecha_final = config["fecha_final"]
 
-
-def establish_connection(url, params=None, payload=None):
-    tqdm_bar(100, "Conectando...", "{l_bar}{bar}| {n_fmt}/{total_fmt} ")
-
-    response = requests.get(url, params=params, data=payload)
-
-    if response.status_code == 200:
-        tqdm_bar(
-            100,
-            "Conexión establecida, descargando información...",
-            "{l_bar}{bar}| {n_fmt}/{total_fmt} ",
-        )
-        # print(response.json())
-        return response
-    else:
-        print("\nConnection failed")
-        print(response.status_code)
-    return response
-
-
-def json_to_csv(json_data, output_filename):
-    tqdm_bar(100, "Generando archivo CSV...", "{l_bar}{bar}| {n_fmt}/{total_fmt} ")
-
-    data = json.loads(json_data)
-    cdr_data = data["CDR"]
-
-    with open(output_filename, "w", newline="") as csvfile:
-        fieldnames = list(cdr_data[0].keys())
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-        writer.writeheader()
-        for row in cdr_data:
-            writer.writerow(row)
-
-    print(f"Archivo CSV generado: {output_filename}")
-
-
-
+params = {
+    "CDRJSON": "1",
+    "ip": IP_VPN,
+    "FechaInicial": fecha_inicial,
+    "FechaFinal": fecha_final,
+    "user": USER_ESTAQUEUE,
+    "password": PASSWORD_ESTAQUEUE,
+}
 
 url = "https://estaqueue.udpsa.com/estadisticasEntrada.php?"
 
 
-# establish_connection(url, params=params)
+def process_data(url, params):
+    try:
+        cdr_data = establish_connection(url, params=params).text
+        json_to_csv_cdr(cdr_data, "process_files/cdr.csv")
 
-json_to_csv(establish_connection(url, params=params).text, "cdr.csv")
+        with open("process_files/cdr.csv", "r") as input_file, open(
+            "process_files/output_filtered.csv", "w", newline=""
+        ) as output_file:
+            reader = csv.DictReader(input_file)
+            fieldnames = reader.fieldnames
+            writer = csv.DictWriter(output_file, fieldnames=fieldnames)
+            writer.writeheader()
+            for row in reader:
+                writer.writerow(row)
+
+        userfield_ids = get_userfield_ids("process_files/output_filtered.csv")
+        corrected_userfield_ids = validate_and_correct_ids(userfield_ids)
+
+        salesforce_query = "SELECT Id, Name, ID_Cliente__c, Operado_Por__c FROM contact WHERE Id IN ({})"
+        salesforce_records = get_salesforce_records(
+            salesforce_query, corrected_userfield_ids
+        )
+
+        merge_cdr_and_salesforce_data(
+            "process_files/output_filtered.csv",
+            salesforce_records,
+            f"iam/informes/informe_{fecha_inicial}-{fecha_final}.csv",
+        )
+
+        print("Process finished successfully")
+    except Exception as e:
+        error_message = f"Error: {str(e)}\n"
+        with open(f"iam/logs/process_log-{fecha_final}.txt", "a") as log_file:
+            log_file.write(error_message)
+
+
+process_data(url, params)
