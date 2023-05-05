@@ -6,6 +6,8 @@ from modules.utils import (
     validate_and_correct_ids,
     establish_connection,
     read_config_file,
+    create_log_file,
+    write_log_message,
 )
 from modules.queue_csv_process import json_to_csv_cdr
 import csv
@@ -28,6 +30,8 @@ url = "https://estaqueue.udpsa.com/estadisticasEntrada.php?"
 
 
 def process_data(url, params):
+    log_file_name = create_log_file("process_log")
+
     try:
         cdr_data = establish_connection(url, params=params).text
         json_to_csv_cdr(cdr_data, "process_files/cdr.csv")
@@ -57,10 +61,11 @@ def process_data(url, params):
         )
 
         print("Process finished successfully")
+        write_log_message(log_file_name, "Process finished successfully")
     except Exception as e:
         error_message = f"Error: {str(e)}\n"
-        with open(f"iam/logs/process_log-{fecha_final}.txt", "a") as log_file:
-            log_file.write(error_message)
+        write_log_message(log_file_name, error_message)
+        print(error_message)
 
 
 process_data(url, params)

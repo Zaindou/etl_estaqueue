@@ -156,3 +156,4 @@ cython_debug/
 #IGNORE LOCAL FILES
 *.csv
 iam/logs/log.txt
+*.txt

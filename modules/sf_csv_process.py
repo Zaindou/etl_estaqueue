@@ -1,3 +1,4 @@
+from modules.utils import create_log_file, write_log_message
 import csv
 
 
@@ -10,7 +11,9 @@ def merge_cdr_and_salesforce_data(input_file, salesforce_data, output_file):
 
     combined_data = []
 
-    with open(input_file, "r") as infile, open("iam/logs/log.txt", "w") as logfile:
+    log_file_name = create_log_file("sf_cdr_log")
+
+    with open(input_file, "r") as infile:
         reader = csv.DictReader(infile)
         for row in reader:
             userfield_id = row["userfield"]
@@ -19,14 +22,19 @@ def merge_cdr_and_salesforce_data(input_file, salesforce_data, output_file):
                 combined_row = {**row, **salesforce_dict[userfield_id]}
                 combined_data.append(combined_row)
             else:
-                logfile.write(f"Userfield ID not found in Salesforce: {userfield_id}\n")
+                write_log_message(
+                    log_file_name,
+                    f"Userfield ID not found in Salesforce: {userfield_id}",
+                )
 
     if combined_data:
         with open(output_file, "w", newline="") as outfile:
             fieldnames = [
+                "tipo_call",
                 "id_campana",
                 "nombre_cliente",
                 "identificacion",
+                "resultado_maquina",
                 "telefono",
                 "fecha",
                 "operado_por",
@@ -38,9 +46,11 @@ def merge_cdr_and_salesforce_data(input_file, salesforce_data, output_file):
 
             for row in combined_data:
                 transformed_row = {
+                    "tipo_call": row["dcontext"],
                     "id_campana": row["accountcode"],
                     "nombre_cliente": row["Name"],
                     "identificacion": row["ID_Cliente__c"],
+                    "resultado_maquina": row["lastapp"],
                     "telefono": row["src"],
                     "fecha": row["calldate"],
                     "operado_por": row["Operado_Por__c"],

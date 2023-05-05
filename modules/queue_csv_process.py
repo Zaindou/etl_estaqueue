@@ -5,7 +5,14 @@ import csv
 def json_to_csv_cdr(json_data, output_file):
     data = json.loads(json_data)
 
-    desired_columns = ["calldate", "src", "userfield", "accountcode"]
+    desired_columns = [
+        "calldate",
+        "src",
+        "userfield",
+        "accountcode",
+        "dcontext",
+        "lastapp",
+    ]
 
     filtered_data = []
     for row in data["CDR"]:
