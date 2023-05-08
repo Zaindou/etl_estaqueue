@@ -68,8 +68,6 @@ def read_config_file(filename):
 
 
 # LOG SYSTEM
-
-
 def create_log_file(log_name):
     current_date = datetime.datetime.now().strftime("%Y-%m-%d")
     log_filename = f"{log_name}_{current_date}.txt"
@@ -83,3 +81,19 @@ def write_log_message(log_filename, message):
         log_file.write(
             f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {message}\n"
         )
+
+
+# LAST PROCESSED LINE SYSTEM
+def get_last_processed_line(file_name):
+    if not os.path.exists(file_name):
+        with open(file_name, "w") as f:
+            f.write("0")
+
+    with open(file_name, "r") as f:
+        last_line = f.readline().strip()
+        return int(last_line) if last_line else 0
+
+
+def save_last_processed_line(file_name, line_number):
+    with open(file_name, "w") as f:
+        f.write(str(line_number))
