@@ -44,7 +44,7 @@ url = "https://estaqueue.udpsa.com/estadisticasEntrada.php?"
 
 def process_data(url, params):
     log_file_name = create_log_file("process_log")
-    last_processed_file = "process_fileslast_processed.txt"
+    last_processed_file = "process_files/fileslast_processed.txt"
 
     try:
         cdr_data = establish_connection(url, params=params).text

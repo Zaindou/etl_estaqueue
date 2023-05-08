@@ -2,6 +2,7 @@ import time
 import requests
 import csv
 import datetime
+import os
 
 from tqdm import tqdm
 
