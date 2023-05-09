@@ -20,7 +20,7 @@ def load_data_to_bigquery(
     table_id,
     csv_file_path,
 ):
-    print(credentials_path, "xd")
+    print("BQ credentials location:" + credentials_path)
     # Configure your Google Cloud credentials
     credentials = service_account.Credentials.from_service_account_file(
         credentials_path

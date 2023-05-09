@@ -20,21 +20,22 @@ from modules.utils import (
     write_log_message,
     get_last_processed_line,
     save_last_processed_line,
+    get_paginated_data,
 )
 from modules.queue_csv_process import json_to_csv_cdr
 import csv
-import os
+import json
 
 
 config = read_config_file("config.txt")
-fecha_inicial = config["fecha_inicial"]
-fecha_final = config["fecha_final"]
+initial_date = config["fecha_inicial"]
+end_date = config["fecha_final"]
 
 params = {
     "CDRJSON": "1",
     "ip": IP_VPN,
-    "FechaInicial": fecha_inicial,
-    "FechaFinal": fecha_final,
+    "FechaInicial": initial_date,
+    "FechaFinal": end_date,
     "user": USER_ESTAQUEUE,
     "password": PASSWORD_ESTAQUEUE,
 }
@@ -43,14 +44,27 @@ url = "https://estaqueue.udpsa.com/estadisticasEntrada.php?"
 
 
 def process_data(url, params):
+    print(
+        "Starting data processing..."
+        + "\n"
+        + f"Initial date: {initial_date}"
+        + " - "
+        + f"End date: {end_date}"
+    )
+
     log_file_name = create_log_file("process_log")
     last_processed_file = "process_files/fileslast_processed.txt"
 
     try:
-        cdr_data = establish_connection(url, params=params).text
-        json_to_csv_cdr(cdr_data, "process_files/cdr.csv")
+        cdr_data_pages = get_paginated_data(url, params)
 
-        last_processed_line = get_last_processed_line(last_processed_file)
+        for index, cdr_data in enumerate(cdr_data_pages):
+            if index == 0:
+                json_to_csv_cdr(cdr_data, "process_files/cdr.csv", mode="w")
+            else:
+                json_to_csv_cdr(cdr_data, "process_files/cdr.csv", mode="a")
+
+        last_processed_line = get_last_processed_line(last_processed_file, initial_date)
 
         with open("process_files/cdr.csv", "r") as input_file, open(
             "process_files/output_filtered.csv", "w", newline=""
@@ -64,7 +78,7 @@ def process_data(url, params):
                 if line_number > last_processed_line:
                     writer.writerow(row)
 
-        save_last_processed_line(last_processed_file, line_number)
+        save_last_processed_line(last_processed_file, initial_date, line_number)
 
         userfield_ids = get_userfield_ids("process_files/output_filtered.csv")
         corrected_userfield_ids = validate_and_correct_ids(userfield_ids)
@@ -77,10 +91,10 @@ def process_data(url, params):
         merge_cdr_and_salesforce_data(
             "process_files/output_filtered.csv",
             salesforce_records,
-            f"iam/informes/informe_{fecha_inicial}-{fecha_final}.csv",
+            f"iam/informes/informe_{initial_date}-{end_date}.csv",
         )
 
-        csv_file_path = f"iam/informes/informe_{fecha_inicial}-{fecha_final}.csv"
+        csv_file_path = f"iam/informes/informe_{initial_date}-{end_date}.csv"
 
         load_data_to_bigquery(
             credentials_path=GOOGLE_APPLICATION_CREDENTIALS_PATH,
@@ -91,7 +105,10 @@ def process_data(url, params):
         )
 
         print("Process finished successfully")
-        write_log_message(log_file_name, "Process finished successfully")
+        write_log_message(
+            log_file_name,
+            f"Process finished successfully {initial_date}-{end_date}",
+        )
     except Exception as e:
         error_message = f"Error: {str(e)}\n"
         write_log_message(log_file_name, error_message)

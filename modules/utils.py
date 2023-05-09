@@ -1,10 +1,10 @@
-import time
-import requests
+from tqdm import tqdm
 import csv
 import datetime
+import json
 import os
-
-from tqdm import tqdm
+import requests
+import time
 
 
 def tqdm_bar(total, desc, bar_format, sleep_time=0.1):
@@ -85,16 +85,68 @@ def write_log_message(log_filename, message):
 
 
 # LAST PROCESSED LINE SYSTEM
-def get_last_processed_line(file_name):
-    if not os.path.exists(file_name):
-        with open(file_name, "w") as f:
-            f.write("0")
+def get_last_processed_line(file_path, date):
+    try:
+        with open(file_path, "r") as f:
+            for line in f:
+                if line.startswith(date):
+                    return int(line.strip().split(" ")[-1])
+    except FileNotFoundError:
+        pass
 
-    with open(file_name, "r") as f:
-        last_line = f.readline().strip()
-        return int(last_line) if last_line else 0
+    return 0
 
 
-def save_last_processed_line(file_name, line_number):
-    with open(file_name, "w") as f:
-        f.write(str(line_number))
+def save_last_processed_line(file_path, date, last_line):
+    lines = []
+    updated = False
+
+    try:
+        with open(file_path, "r") as f:
+            lines = f.readlines()
+            for i, line in enumerate(lines):
+                if line.startswith(date):
+                    lines[i] = f"{date} {last_line}\n"
+                    updated = True
+                    break
+    except FileNotFoundError:
+        pass
+
+    if not updated:
+        lines.append(f"{date} {last_line}\n")
+
+    with open(file_path, "w") as f:
+        f.writelines(lines)
+
+
+# Teleamigo add pagination to the API, so we need to get the total number of pages.abs
+def get_paginated_data(url, params):
+    """
+    The function retrieves paginated data from a specified URL using a specified set of parameters.
+
+    :param url: The URL of the API endpoint to fetch data from
+    :param params: a dictionary containing parameters to be passed in the API request
+    :return: a list of CDR data pages.
+    """
+    page = 1
+    cdr_data_pages = []
+
+    while True:
+        print(f"Fetching data for page {page}")
+        params["Pagina"] = page
+        response = establish_connection(url, params=params)
+        if response.status_code == 200:
+            data = response.text
+            if not data or json.loads(data) == []:
+                print(f"No data found on page {page}")
+                break
+            else:
+                cdr_data_pages.append(data)
+                print(f"Data fetched for page {page}")
+        else:
+            print(f"Failed to fetch data for page {page}")
+            break
+
+        page += 1
+
+    return cdr_data_pages
