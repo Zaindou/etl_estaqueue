@@ -1,5 +1,8 @@
 from modules.utils import create_log_file, write_log_message
 import csv
+import os
+
+current_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def merge_cdr_and_salesforce_data(input_file, salesforce_data, output_file):
@@ -11,7 +14,9 @@ def merge_cdr_and_salesforce_data(input_file, salesforce_data, output_file):
 
     combined_data = []
 
-    log_file_name = create_log_file("sf_cdr_log")
+    log_file_name = create_log_file(
+        os.path.join(current_directory, "iam", "logs", "sf_cdr_log")
+    )
 
     with open(input_file, "r") as infile:
         reader = csv.DictReader(infile)
