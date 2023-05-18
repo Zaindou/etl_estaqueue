@@ -61,7 +61,7 @@ def validate_and_correct_ids(ids):
 
 def read_config_file(filename):
     config = {}
-    with open(f"iam/{filename}", "r") as file:
+    with open(filename, "r") as file:
         for line in file.readlines():
             key, value = line.strip().split("=")
             config[key] = value
