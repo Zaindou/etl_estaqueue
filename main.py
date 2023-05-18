@@ -29,18 +29,14 @@ import os
 
 
 current_directory = os.path.dirname(os.path.realpath(__file__))
-config_file_path = os.path.join(current_directory, "iam", "config.txt")
 
-
-config = read_config_file(config_file_path)
-initial_date = config["fecha_inicial"]
-end_date = config["fecha_final"]
+current_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
 params = {
     "CDRJSON": "1",
     "ip": IP_VPN,
-    "FechaInicial": initial_date,
-    "FechaFinal": end_date,
+    "FechaInicial": current_datee,
+    "FechaFinal": current_date,
     "user": USER_ESTAQUEUE,
     "password": PASSWORD_ESTAQUEUE,
 }
@@ -52,9 +48,9 @@ def process_data(url, params):
     print(
         "Starting data processing..."
         + "\n"
-        + f"Initial date: {initial_date}"
+        + f"Initial date: {current_date}"
         + " - "
-        + f"End date: {end_date}"
+        + f"End date: {current_date}"
     )
 
     log_file_name = create_log_file(os.path.join(current_directory, "process_log"))
