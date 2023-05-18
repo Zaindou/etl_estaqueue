@@ -30,7 +30,6 @@ import os
 
 
 current_directory = os.path.dirname(os.path.realpath(__file__))
-
 current_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
 params = {
@@ -54,7 +53,10 @@ def process_data(url, params):
         + f"End date: {current_date}"
     )
 
-    log_file_name = create_log_file(os.path.join(current_directory, "process_log"))
+    log_file_name = create_log_file(
+        os.path.join(current_directory, "iam\logs\process_log")
+    )
+    print(f"Log file created: {log_file_name}")
     last_processed_file = os.path.join(
         current_directory, "process_files/fileslast_processed.txt"
     )
@@ -76,7 +78,7 @@ def process_data(url, params):
                     mode="a",
                 )
 
-        last_processed_line = get_last_processed_line(last_processed_file, initial_date)
+        last_processed_line = get_last_processed_line(last_processed_file, current_date)
 
         with open(
             os.path.join(current_directory, "process_files/cdr.csv"), "r"
@@ -94,7 +96,7 @@ def process_data(url, params):
                 if line_number > last_processed_line:
                     writer.writerow(row)
 
-        save_last_processed_line(last_processed_file, initial_date, line_number)
+        save_last_processed_line(last_processed_file, current_date, line_number)
 
         userfield_ids = get_userfield_ids("process_files/output_filtered.csv")
         corrected_userfield_ids = validate_and_correct_ids(userfield_ids)
@@ -108,12 +110,13 @@ def process_data(url, params):
             os.path.join(current_directory, "process_files/output_filtered.csv"),
             salesforce_records,
             os.path.join(
-                current_directory, f"iam/informes/informe_{initial_date}-{end_date}.csv"
+                current_directory,
+                f"iam/informes/informe_{current_date}-{current_date}.csv",
             ),
         )
 
         csv_file_path = os.path.join(
-            current_directory, f"iam/informes/informe_{initial_date}-{end_date}.csv"
+            current_directory, f"iam/informes/informe_{current_date}-{current_date}.csv"
         )
 
         load_data_to_bigquery(
@@ -127,7 +130,7 @@ def process_data(url, params):
         print("Process finished successfully")
         write_log_message(
             log_file_name,
-            f"Process finished successfully {initial_date}-{end_date}",
+            f"Process finished successfully {current_date}-{current_date}",
         )
     except Exception as e:
         error_message = f"Error: {str(e)}\n"
