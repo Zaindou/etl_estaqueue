@@ -58,7 +58,7 @@ def process_data(url, params):
     )
     print(f"Log file created: {log_file_name}")
     last_processed_file = os.path.join(
-        current_directory, "process_files/fileslast_processed.txt"
+        current_directory, "process_files", "fileslast_processed.txt"
     )
 
     try:
@@ -68,22 +68,22 @@ def process_data(url, params):
             if index == 0:
                 json_to_csv_cdr(
                     cdr_data,
-                    os.path.join(current_directory, "process_files/cdr.csv"),
+                    os.path.join(current_directory, "process_files", "cdr.csv"),
                     mode="w",
                 )
             else:
                 json_to_csv_cdr(
                     cdr_data,
-                    os.path.join(current_directory, "process_files/cdr.csv"),
+                    os.path.join(current_directory, "process_files", "cdr.csv"),
                     mode="a",
                 )
 
         last_processed_line = get_last_processed_line(last_processed_file, current_date)
 
         with open(
-            os.path.join(current_directory, "process_files/cdr.csv"), "r"
+            os.path.join(current_directory, "process_files", "cdr.csv"), "r"
         ) as input_file, open(
-            os.path.join(current_directory, "process_files/output_filtered.csv"),
+            os.path.join(current_directory, "process_files", "output_filtered.csv"),
             "w",
             newline="",
         ) as output_file:
@@ -98,7 +98,9 @@ def process_data(url, params):
 
         save_last_processed_line(last_processed_file, current_date, line_number)
 
-        userfield_ids = get_userfield_ids("process_files/output_filtered.csv")
+        userfield_ids = get_userfield_ids(
+            os.path.join(current_directory, "process_files", "output_filtered.csv")
+        )
         corrected_userfield_ids = validate_and_correct_ids(userfield_ids)
 
         salesforce_query = "SELECT Id, Name, ID_Cliente__c, Operado_Por__c FROM contact WHERE Id IN ({})"
@@ -107,16 +109,21 @@ def process_data(url, params):
         )
 
         merge_cdr_and_salesforce_data(
-            os.path.join(current_directory, "process_files/output_filtered.csv"),
+            os.path.join(current_directory, "process_files", "output_filtered.csv"),
             salesforce_records,
             os.path.join(
                 current_directory,
-                f"iam/informes/informe_{current_date}-{current_date}.csv",
+                "iam",
+                "informes",
+                f"informe_{current_date}-{current_date}.csv",
             ),
         )
 
         csv_file_path = os.path.join(
-            current_directory, f"iam/informes/informe_{current_date}-{current_date}.csv"
+            current_directory,
+            "iam",
+            "informes",
+            f"informe_{current_date}-{current_date}.csv",
         )
 
         load_data_to_bigquery(
