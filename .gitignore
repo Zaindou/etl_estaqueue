@@ -158,10 +158,5 @@ cython_debug/
 iam/logs/log.txt
 
 *.json
-iam/config.txt
-iam/config.txt
-iam/informes/Vídeos - Acceso directo.lnk
-iam/logs/process_log_2023-04-28.txt
-iam/logs/process_log_2023-05-05.txt
-iam/logs/process_log_2023-05-07.txt
-iam/logs/process_log_2023-05-09.txt
+*.txt
+
