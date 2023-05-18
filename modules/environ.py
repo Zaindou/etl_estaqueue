@@ -26,8 +26,6 @@ GOOGLE_APPLICATION_CREDENTIALS_PATH = os.path.join(
     current_directory, os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_PATH")
 )
 
-print(GOOGLE_APPLICATION_CREDENTIALS_PATH)
-
 PROJECT_ID = os.environ.get("PROJECT_ID")
 DATASET_ID = os.environ.get("DATASET_ID")
 TABLE_ID = os.environ.get("TABLE_ID")

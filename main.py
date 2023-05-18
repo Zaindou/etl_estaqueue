@@ -54,7 +54,7 @@ def process_data(url, params):
     )
 
     log_file_name = create_log_file(
-        os.path.join(current_directory, "iam/logs/process_log")
+        os.path.join(current_directory, "iam\logs\process_log")
     )
     print(f"Log file created: {log_file_name}")
     last_processed_file = os.path.join(
