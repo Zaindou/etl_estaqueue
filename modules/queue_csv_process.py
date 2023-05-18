@@ -15,6 +15,7 @@ def json_to_csv_cdr(json_data, output_file, mode="w"):
     ]
 
     filtered_data = []
+
     for row in data["CDR"]:
         if row["userfield"]:
             filtered_row = {

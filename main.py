@@ -25,9 +25,14 @@ from modules.utils import (
 from modules.queue_csv_process import json_to_csv_cdr
 import csv
 import json
+import os
 
 
-config = read_config_file("config.txt")
+current_directory = os.path.dirname(os.path.realpath(__file__))
+config_file_path = os.path.join(current_directory, "config.txt")
+
+
+config = read_config_file(config_file_path)
 initial_date = config["fecha_inicial"]
 end_date = config["fecha_final"]
 
@@ -52,22 +57,26 @@ def process_data(url, params):
         + f"End date: {end_date}"
     )
 
-    log_file_name = create_log_file("process_log")
-    last_processed_file = "process_files/fileslast_processed.txt"
+    log_file_name = create_log_file(
+        os.path.join(current_directory, "process_log"))
+    last_processed_file = os.path.join(
+        current_directory, "process_files/fileslast_processed.txt")
 
     try:
         cdr_data_pages = get_paginated_data(url, params)
 
         for index, cdr_data in enumerate(cdr_data_pages):
             if index == 0:
-                json_to_csv_cdr(cdr_data, "process_files/cdr.csv", mode="w")
+                json_to_csv_cdr(cdr_data, os.path.join(
+                    current_directory, "process_files/cdr.csv"), mode="w")
             else:
-                json_to_csv_cdr(cdr_data, "process_files/cdr.csv", mode="a")
+                json_to_csv_cdr(cdr_data, os.path.join(
+                    current_directory, "process_files/cdr.csv"), mode="a")
 
         last_processed_line = get_last_processed_line(last_processed_file, initial_date)
 
-        with open("process_files/cdr.csv", "r") as input_file, open(
-            "process_files/output_filtered.csv", "w", newline=""
+        with open(os.path.join(current_directory, "process_files/cdr.csv"), "r") as input_file, open(
+            os.path.join(current_directory, "process_files/output_filtered.csv"), "w", newline=""
         ) as output_file:
             reader = csv.DictReader(input_file)
             fieldnames = reader.fieldnames
@@ -89,12 +98,13 @@ def process_data(url, params):
         )
 
         merge_cdr_and_salesforce_data(
-            "process_files/output_filtered.csv",
+            os.path.join(current_directory,
+                         "process_files/output_filtered.csv"),
             salesforce_records,
-            f"iam/informes/informe_{initial_date}-{end_date}.csv",
+            os.path.join(current_directory, f"iam/informes/informe_{initial_date}-{end_date}.csv"),
         )
 
-        csv_file_path = f"iam/informes/informe_{initial_date}-{end_date}.csv"
+        csv_file_path = os.path.join(current_directory, f"iam/informes/informe_{initial_date}-{end_date}.csv")
 
         load_data_to_bigquery(
             credentials_path=GOOGLE_APPLICATION_CREDENTIALS_PATH,
