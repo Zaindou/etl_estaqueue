@@ -23,6 +23,7 @@ from modules.utils import (
     get_paginated_data,
 )
 from modules.queue_csv_process import json_to_csv_cdr
+import datetime
 import csv
 import json
 import os
@@ -35,7 +36,7 @@ current_date = datetime.datetime.now().strftime("%Y-%m-%d")
 params = {
     "CDRJSON": "1",
     "ip": IP_VPN,
-    "FechaInicial": current_datee,
+    "FechaInicial": current_date,
     "FechaFinal": current_date,
     "user": USER_ESTAQUEUE,
     "password": PASSWORD_ESTAQUEUE,
