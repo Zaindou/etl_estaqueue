@@ -72,13 +72,13 @@ def read_config_file(filename):
 def create_log_file(log_name):
     current_date = datetime.datetime.now().strftime("%Y-%m-%d")
     log_filename = f"{log_name}_{current_date}.txt"
-    with open(f"iam/logs/{log_filename}", "w") as log_file:
+    with open(log_filename, "w") as log_file:
         log_file.write(f"Log created on {current_date}\n")
     return log_filename
 
 
 def write_log_message(log_filename, message):
-    with open(f"iam/logs/{log_filename}", "a") as log_file:
+    with open(log_filename, "a") as log_file:
         log_file.write(
             f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {message}\n"
         )
