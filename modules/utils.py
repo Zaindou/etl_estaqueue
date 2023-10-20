@@ -37,7 +37,9 @@ def get_userfield_ids(csv_path):
     with open(csv_path, "r", encoding="utf-8") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            unique_ids.add(row["userfield"])
+            userfield_id = row["userfield"]
+            if len(userfield_id) >= 18:
+                unique_ids.add(row["userfield"])
     return list(unique_ids)
 
 
